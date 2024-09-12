@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
+const userschema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -13,23 +13,22 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
+        validate: {
+            validator: function(v) {
+                return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{6,}$/.test(v);
+            },
+            message: props => `Password should be at least 6 characters long and include at least one letter, one number, and one special character.`
+        }
     },
-    phone: String,
-    profilePic: {
+    profilepic: {
         type: String,
-        default: "https://www.pngitem.com/pimgs/m/30-307416_profile-icon-png-image-free-download-searchpng-employee.png"
-
+        default: "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png"
     },
-    menu: String,
-    price: Number,
-    hotel:{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Hotels"
-    },
-    
+    hotels: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Hotels"
+    }]
 });
 
-
-const User = mongoose.model("User", userSchema);
-
+const User = mongoose.model('User', userschema);
 module.exports = { User };

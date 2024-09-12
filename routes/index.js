@@ -1,12 +1,10 @@
-const express = require ('express');
-const { v1Router } = require('./v1');
 
-const apiRouter = express.Router();
+const express=require('express')
+const {v1router}=require('./v1')
 
-apiRouter.use('/v1',v1Router)
-
+const apirouter=express.Router()
 
 
+apirouter.use('/v1',v1router)
 
-
-module.exports = {apiRouter};
+module.exports={apirouter}

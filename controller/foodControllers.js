@@ -1,159 +1,75 @@
-const { FoodItem } = require("../models/foodModel");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { generateToken } = require("../utils/token"); 
+const { FoodItem } = require("../models/foodmodel");
 
 
-const addFoodItem = async (req, res, next) => {
+const getAllFoodItems = async (req, res) => {
     try {
-        const { name, description, price, category, image } = req.body;
-
-
-        if (!name || !price) {
-            return res.status(400).json({
-                success: false,
-                message: "Name and price are required"
-            });
-        }
-
-    
-        const newFoodItem = new FoodItem({
-            name,
-            description,
-            price,
-            category,
-            image,
-        });
-
-        
-        await newFoodItem.save();
-        res.json({
-            success: true,
-            message: "Food item added successfully",
-            data: newFoodItem
-        });
-
+        const foodItems = await FoodItem.find();
+        res.status(200).json(foodItems);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
+        res.status(500).json({ error: error.message });
     }
 };
 
 
-const getFoodItems = async (req, res, next) => {
+const getFoodItemById = async (req, res) => {
     try {
-        
-        const foodItems = await FoodItem.find().populate('category');
-        res.json({
-            success: true,
-            message: "Food items fetched successfully",
-            data: foodItems
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
-    }
-};
-
-// Update a food item
-const updateFoodItem = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const updatedData = req.body;
-
-        // Update the food item by ID
-        const updatedFoodItem = await FoodItem.findByIdAndUpdate(id, updatedData, { new: true });
-
-        if (!updatedFoodItem) {
-            return res.status(404).json({
-                success: false,
-                message: "Food item not found"
-            });
-        }
-
-        res.json({
-            success: true,
-            message: "Food item updated successfully",
-            data: updatedFoodItem
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
-    }
-};
-
-// Delete a food item
-const deleteFoodItem = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-
-        // Delete the food item by ID
-        const deletedFoodItem = await FoodItem.findByIdAndDelete(id);
-
-        if (!deletedFoodItem) {
-            return res.status(404).json({
-                success: false,
-                message: "Food item not found"
-            });
-        }
-
-        res.json({
-            success: true,
-            message: "Food item deleted successfully"
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
-    }
-};
-
-// Check food availability
-const checkFoodAvailability = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const foodItem = await FoodItem.findById(id);
-
+        const foodItem = await FoodItem.findById(req.params.id);
         if (!foodItem) {
-            return res.status(404).json({
-                success: false,
-                message: "Food item not found"
-            });
+            return res.status(404).json({ error: 'Food item not found' });
         }
-
-        const isAvailable = foodItem.availability;
-        res.json({
-            success: true,
-            message: `Food item is ${isAvailable ? 'available' : 'not available'}`,
-            availability: isAvailable
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
+        res.status(200).json(foodItem);
+    } catch (err) { 
+        console.log(err)
+        res.status(500).json({ error: err.message }); // Improved error handling
     }
 };
 
-module.exports = {
-    addFoodItem,
-    getFoodItems,
-    updateFoodItem,
-    deleteFoodItem,
-    checkFoodAvailability
+
+const createFoodItem = async (req, res) => {
+    try {
+        const foodItem = new FoodItem(req.body);
+        await foodItem.save();
+        res.status(201).json(foodItem);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 };
+
+
+const updateFoodItem = async (req, res) => {
+    try {
+        const foodItem = await FoodItem.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        if (!foodItem) {
+            return res.status(404).json({ error: 'Food item not found' });
+        }
+        res.status(200).json(foodItem);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+
+const deleteFoodItem = async (req, res) => {
+    try {
+        const foodItem = await FoodItem.findByIdAndDelete(req.params.id);
+        if (!foodItem) {
+            return res.status(404).json({ error: 'Food item not found' });
+        }
+        res.status(200).json({ message: 'Food item deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+const searchFoodItems = async (req, res) => {
+    try {
+        const { query } = req.query;
+        const foodItems = await FoodItem.find({ name: new RegExp(query, 'i') });
+        res.status(200).json(foodItems);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { getAllFoodItems, getFoodItemById, createFoodItem, updateFoodItem, deleteFoodItem, searchFoodItems };

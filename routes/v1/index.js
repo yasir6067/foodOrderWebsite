@@ -1,11 +1,19 @@
 const express = require('express');
-const { userRouter } = require('./userRoutes');
-const { hotelRouter } = require('./hotelRoutes');
-const { foodRouter } = require('./foodRoutes');
-const v1Router = express.Router();
+const { userrouters } = require('./userrouters');
+const { hotelrouters } = require('./hotelrouters');
+const { fooditemsroutes } = require('./fooditemsroutes');
+const {adminRouter}=require('./adminroutes')
+const { cartRouter}=require("./cartroutes")
 
-v1Router.use("/user", userRouter);
-v1Router.use("/hotel", hotelRouter);
-v1Router.use("/food", foodRouter)
 
-module.exports = {v1Router}
+
+const v1router = express.Router();
+
+// Add routes to v1 for users, hotels, food items, and admin
+v1router.use('/user', userrouters);
+v1router.use('/hotel', hotelrouters);
+v1router.use('/fooditems', fooditemsroutes);
+v1router.use('/admin',adminRouter)
+v1router.use('/cart',cartRouter)
+
+module.exports = { v1router };

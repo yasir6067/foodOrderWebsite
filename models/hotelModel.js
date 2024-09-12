@@ -35,7 +35,7 @@ const hotelschema = new mongoose.Schema({
     },
     fooditems: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'fooditems'
+        ref: 'FoodItem'
     }],
     isActive: {
         type: Boolean,
@@ -49,9 +49,9 @@ const hotelschema = new mongoose.Schema({
     image: {
         type: String
     },
-    admin:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"admin"
+    admin: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin'
     }
 });
 

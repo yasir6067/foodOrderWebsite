@@ -1,136 +1,134 @@
-const { Hotel } = require("../models/hotelModel");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { generateToken } = require("../utils/token");
+const { Hotel } = require('../models/hotelmodel.js');
 
-
-const hotelSignup = async (req, res, next) => {
+const createhotel = async (req, res) => {
     try {
-        const { name, email, password, phone, profilePic, address } = req.body;
+        const userId = req.user; // Assuming req.user is populated by auth middleware
 
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required"
-            });
-        }
-
-        const isHotelExist = await Hotel.findOne({ email });
-        if (isHotelExist) {
-            return res.status(400).json({
-                success: false,
-                message: "Hotel already exists"
-            });
-        }
-
-        const saltRounds = 10;
-        const hashedPassword = bcrypt.hashSync(password, saltRounds);
-
-        const newHotel = new Hotel({
+        const {
             name,
-            email,
-            password: hashedPassword,
+            address: { street, city, state, postalcode, country },
             phone,
-            profilePic,
-            address
+            email,
+            website,
+            rating,
+            cuisineType,
+            openingHours: { open, close },
+            fooditems,
+            isActive
+        } = req.body;
+
+        // Image handling
+        const image = req.file ? req.file.path : null; // Assuming multer is saving the file path
+
+        // Required fields validation
+        if (!name || !city || !country || !phone || !email) {
+            return res.status(400).json({ message: 'Missing required fields: name, city, country, phone, and email are required.' });
+        }
+
+        // Check if hotel already exists
+        const ishotelexist = await Hotel.findOne({ name });
+        if (ishotelexist) {
+            return res.status(400).json({ success: false, message: "Hotel already exists" });
+        }
+
+        // Create new hotel
+        const newhotel = new Hotel({
+            name,
+            address: { street, city, state, postalcode, country },
+            phone,
+            email,
+            website,
+            rating,
+            cuisineType,
+            openingHours: { open, close },
+            fooditems,
+            isActive,
+            image
         });
 
-        await newHotel.save();
-        const token = generateToken(newHotel._id);
+        // Assign admin if user is admin
+        if (userId.role === 'admin') {
+            newhotel.admin = userId.id;
+        }
 
-        res.cookie('token', token);
-        res.json({
-            success: true,
-            message: "Hotel created successfully"
-        });
-
+        const savedhotel = await newhotel.save();
+        res.status(201).json(savedhotel);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to create hotel", error: error.message });
     }
 };
 
-// Hotel Login
-const hotelLogin = async (req, res, next) => {
+const getallhotels = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: 'All fields are required' });
+        const hotels = await Hotel.find();
+        if (!hotels || hotels.length === 0) {
+            return res.status(200).json({ message: "Empty database" });
         }
+        res.status(200).json(hotels);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to retrieve all hotels", error: err.message });
+    }
+};
 
-        const hotel = await Hotel.findOne({ email });
+const gethotelbyid = async (req, res) => {
+    try {
+        const hotel = await Hotel.findById(req.params.id).populate('fooditems');
         if (!hotel) {
-            return res.status(404).json({ success: false, message: "Hotel not found" });
+            return res.status(404).json({ message: "Hotel not found" });
+        }
+        res.status(200).json(hotel);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to retrieve the hotel", error: error.message });
+    }
+};
+
+const updatehotels = async (req, res, next) => {
+    try {
+        const {
+            name,
+            address: { street, city, state, postalcode, country },
+            phone,
+            email,
+            website,
+            rating,
+            cuisineType,
+            openingHours: { open, close },
+            fooditems,
+            isActive
+        } = req.body;
+
+        // Image handling
+        const image = req.file ? req.file.path : null; // Assuming multer is saving the file path
+
+        // Find and update the hotel
+        const updatedHotel = await Hotel.findByIdAndUpdate(req.params.id, {
+            name,
+            address: { street, city, state, postalcode, country },
+            phone,
+            email,
+            website,
+            rating,
+            cuisineType,
+            openingHours: { open, close },
+            fooditems,
+            isActive,
+            ...(image && { image })
+        }, { new: true, runValidators: true }).populate('fooditems');
+
+        if (!updatedHotel) {
+            return res.status(404).json({ error: 'Hotel not found' });
         }
 
-        const passwordMatch = bcrypt.compareSync(password, hotel.password);
-        if (!passwordMatch) {
-            return res.status(401).json({ message: "Invalid credentials" });
-        }
-
-        const token = generateToken(hotel._id);
-        res.cookie("token", token);
-        res.json({
-            success: true,
-            message: "Hotel login successful"
-        });
-
+        res.status(200).json(updatedHotel);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
+        res.status(400).json({ error: error.message });
     }
 };
 
-// Hotel Logout
-const hotelLogout = async (req, res, next) => {
-    try {
-        res.clearCookie("token");
-        res.json({ success: true, message: "Hotel logout successful" });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
-    }
+module.exports = {
+    createhotel,
+    getallhotels,
+    gethotelbyid,
+    updatehotels
 };
-
-// Fetch Hotel Profile
-const hotelProfile = async (req, res, next) => {
-    try {
-        const { hotel } = req;
-        const hotelData = await Hotel.findOne({ _id: hotel.id });
-        res.json({ success: true, message: "Hotel data fetched", data: hotelData });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
-    }
-};
-
-// Check Hotel Authorization
-const checkHotel = async (req, res, next) => {
-    try {
-        const { hotel } = req;
-        if (!hotel) {
-            return res.status(401).json({ success: false, message: "Hotel not authorized" });
-        }
-        res.json({ success: true, message: "Hotel authorized" });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
-    }
-};
-
-module.exports = { hotelSignup, hotelLogin, hotelLogout, hotelProfile, checkHotel };

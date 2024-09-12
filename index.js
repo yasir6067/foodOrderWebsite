@@ -1,24 +1,23 @@
-const express = require('express')
-const { apiRouter } = require('./routes')
-const { connectDB } = require('./config/db')
-const cookieParser = require('cookie-parser')
+const express = require('express');
+const cookieParser = require('cookie-parser');  // Import cookie-parser
+const { apirouter } = require('./routes');
+const { connectdb } = require('./config/db.js');  // Correctly import connectdb
+
+const app = express();
+
+app.use(express.json());
+app.use(cookieParser());  // Use cookie-parser middleware
 
 const port = 3000;
 
-const app = express()
+connectdb();
 
-app.use(express.json())
-app.use(cookieParser())
+app.use('/api', apirouter);
 
-
-connectDB();
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
+app.all("*", (req, res) => {
+    res.status(404).json({ message: "Endpoint does not exist" });
 });
 
-app.use("/api", apiRouter)
-
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+    console.log(`Server running on port ${port}`);
+});

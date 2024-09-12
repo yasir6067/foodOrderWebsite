@@ -1,136 +1,131 @@
-const { User } = require("../models/userModel");
-const bcrypt = require("bcrypt");
+const { User } = require('../models/usermodel.js');
+const bcrypt = require('bcrypt');
+const { generatetoken } = require('../utils/token.js');
 const jwt = require("jsonwebtoken");
-const { generateToken} = require ("../utils/token")
+const dotenv = require('dotenv');
+dotenv.config();
 
-
-const userSignup = async (req, res, next) => {
+const usersignup = async (req, res, next) => {
     try {
-        const { name, email, password, phone, profilePic } = req.body;
+        const { name, email, password, phone, profilepic, hotels } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required"
-            });
+            return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        const isUserExist = await User.findOne({ email });
+        const isUserExist = await user.findOne({ email });
         if (isUserExist) {
-            return res.status(400).json({
-                message: "User already exists"
-            });
+            return res.status(400).json({ success: false, message: "User already exists" });
         }
 
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hashSync(password, saltRounds);
+        const hashedPassword = bcrypt.hashSync(password, saltRounds);
+        console.log(hashedPassword);
 
-        const newUser = new User({
+        const newUser = await user.create({
             name,
             email,
             password: hashedPassword,
-            phone,
-            profilePic
+            profilepic,
+            hotels
         });
-        await newUser.save();
 
-        const token = generateToken(newUser._id);
+        const token = generatetoken(newUser._id);
+        res.cookie('token', token);
 
-        res.cookie('token', token );
-        res.json({
-            success: true,
-            message: "User created successfully"
-        });
+        return res.status(201).json({ success: true, message: "User created successfully", user: newUser });
 
     } catch (error) {
-        console.log(error);
-        res.status(error.statusCode || 500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
+        console.error(error);
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };
 
-const userLogin = async (req, res, next) => {
+const userlogin = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            res.status(400).json({ message: 'all field are required' })
+        const { password, email } = req.body;
+        if (!password || !email) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        const userExist = await User.findOne({ email});
-        if(!userExist){
-            return res.status(404).json({success: false, message: "user does not exist"});
+        const userexist = await user.findOne({ email });
+        if (!userexist) {
+            return res.status(404).json({ success: false, message: "User does not exist" });
         }
 
-        const passwordMatch = bcrypt.compareSync(password, userExist.password);
-        if (!passwordMatch){
-            return res.status(401).json({message: "user not autherized"});
+        const passwordmatch = bcrypt.compareSync(password, userexist.password);
+        if (!passwordmatch) {
+            return res.status(401).json({ message: "User not authorized" });
         }
 
-        const token = generateToken(userExist._id);
+        const token = generatetoken(userexist._id);
+        res.cookie('token', token);
 
-        res.cookie("token", token);
-        res.json({
-            success: true,
-            message: "user login successfull"
-        });
+        return res.status(200).json({ success: true, message: "User logged in successfully" });
+
     } catch (error) {
-        console.log(error);
-        res.status(error.statusCode || 500).json({
-            success: false,
-            message: error.message || "Internal server error"
-        });
+        console.error(error);
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };
 
-
-const userLogout = async (req, res, next) => {
+const userlogout = async (req, res, next) => {
     try {
-      res.clearCookie("token");
-      res.json({message: "user logout success", success: true})
+        res.clearCookie('token');
+        res.json({ message: "User logged out successfully", success: true });
 
     } catch (error) {
         console.log(error);
-        res.status(error.statusCode || 500).json({
-            message: error.message || "Internal server error"
-        });
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };
 
-const userProfile = async (req, res, next) => {
+const userprofile = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const userdata = await user.findById(id); 
+        if (!userdata) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        res.json({ success: true, message: "User profile retrieved", data: userdata });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message || "Internal server error" });
+    }
+};
+
+const checkuser = (req, res, next) => {
     try {
         const { user } = req;
-        console.log(user, '=====user');
-
-        
-        const userData = await User.findOne({_id: user.id});
-        res.json({ success: true, message: "user data fetched", data: userData});
-
-
-    } catch (error) {
-        console.log(error);
-        res.status(error.statusCode || 500).json({
-            message: error.message || "Internal server error"
-        });
-    }
-};
-
-const checkUser = async (req, res, next) => {
-    try {
-        const {user}=req;
-        if(!user){
-            res.status(401).json({success: false, message: "user not autherized"})
+        if (!user) {
+            return res.status(401).json({ success: false, message: "User not authorized" });
         }
-        res.json({success: true, message:"user autherized"})
-    } catch (error) {
-        console.log(error);
-        res.status(error.statusCode || 500).json({
-            message: error.message || "Internal server error"
-        });
+        res.json({ success: true, message: "User authorized" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, message: "An error occurred", error: err.message });
     }
 };
 
+const userauth = (req, res, next) => {
+    try {
+        const { token } = req.cookies;
+        if (!token) {
+            return res.status(401).json({ success: false, message: "User not authorized, cookies not found" });
+        }
 
+        const tokenVerified = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        if (!tokenVerified) {
+            return res.status(401).json({ success: false, message: "User not verified" });
+        }
 
-module.exports = { userSignup, userLogin, userLogout, userProfile, checkUser };
+        req.user = tokenVerified;
+        next(); 
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+module.exports = { usersignup, userlogin, userlogout, userprofile, userauth, checkuser };
