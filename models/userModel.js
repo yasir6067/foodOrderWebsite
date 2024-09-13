@@ -28,7 +28,10 @@ const userschema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Hotels"
     }]
-});
+}, { timestamps: true });  // Track createdAt and updatedAt
+
+// Create an index for email for better performance and uniqueness handling
+userschema.index({ email: 1 }, { unique: true });
 
 const User = mongoose.model('User', userschema);
 module.exports = { User };

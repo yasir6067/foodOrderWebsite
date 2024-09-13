@@ -14,11 +14,10 @@ const fooditemsSchema = new mongoose.Schema({
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category' 
+        ref: 'Category'
     },
     image: {
-        type: String 
-        
+        type: String
     },
     availability: {
         type: Boolean,

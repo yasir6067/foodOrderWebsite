@@ -7,8 +7,8 @@ const cartSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    FoodItem: [{
-        FoodItemId: {
+    foodItems: [{
+        foodItemId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "FoodItem",
             required: true,
@@ -23,7 +23,7 @@ const cartSchema = new mongoose.Schema({
             default: 1,
         },
     }],
-    totalprice: {
+    totalPrice: {
         type: Number,
         required: true,
         default: 0,
@@ -31,8 +31,8 @@ const cartSchema = new mongoose.Schema({
 });
 
 cartSchema.methods.calculateTotalPrice = function() {
-    this.totalprice = this.FoodItem.reduce((total, FoodItem) => 
-        total + (FoodItem.price * foodItem.quantity), 0
+    this.totalPrice = this.foodItems.reduce((total, item) => 
+        total + (item.price * item.quantity), 0
     );
 };
 

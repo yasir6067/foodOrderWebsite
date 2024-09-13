@@ -1,70 +1,70 @@
-const { Fooditem } = require("../models/fooditemsmodels");
-const { review} = require("../models/reviewmodel");
+const { FoodItem } = require("../models/fooditemsmodels");
+const { Review } = require("../models/reviewmodel");
 
 const addReview = async (req, res) => {
     try {
-      const { FooditemId, rating, comment } = req.body;
-      const userId = req.user.id;
-  
-      
-      const fooditem = await Fooditem.findById(FooditemId);
-      if (!fooditem) {
-        return res.status(404).json({ message: "Food item not found" });
-      }
-  
-      
-      const review = await Review.findOneAndUpdate(
-        { userId, FooditemId },
-        { rating, comment },
-        { new: true, upsert: true }
-      );
-  
-      res.status(201).json(review);
+        const { foodItemId, rating, comment } = req.body;
+        const userId = req.user.id;
+
+        const foodItem = await FoodItem.findById(foodItemId);
+        if (!foodItem) {
+            return res.status(404).json({ message: "Food item not found" });
+        }
+
+        const review = await Review.findOneAndUpdate(
+            { userId, foodItemId },
+            { rating, comment },
+            { new: true, upsert: true }
+        );
+
+        res.status(201).json(review);
     } catch (error) {
-      console.error(error);  
-      res.status(500).json({ message: "Internal server error", error });
+        console.error(error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
-  };
-  
-const getfoodReviews=async(req,res)=>{
-    try{
-        const {FooditemId}=req.params;
-        const reviews=await review.find({FooditemId}).populate("FooditemId","name").sort({createdAt:-1})
-        if(!review.length){
-            return res.status(404).json({message:"no reviews found for this cfood items"})
-        }
-        req.status(200).json(reviews)
-    }catch(error){
-        return res.status(500).json({message:"inernal server error",error})
-    }
-}
+};
 
-const deleteReview=async(req,res)=>{
-    try{
-        const {reviewId}=req.params;
-        const review =await review.findOneAndDelete({_id:reviewId,})
-        if(!review){
-            return res.status(404).json({message:"review not found"})
+const getFoodReviews = async (req, res) => {
+    try {
+        const { foodItemId } = req.params;
+        const reviews = await Review.find({ foodItemId }).populate("foodItemId", "name").sort({ createdAt: -1 });
+        if (!reviews.length) {
+            return res.status(404).json({ message: "No reviews found for this food item" });
         }
-        res.status(200).json({message:"review deleted successfully"})
-    }catch(error){
-        res.status(500).json({message:"internal server error",error})
+        res.status(200).json(reviews);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
-    
-}
-const getAverageRating=async(req,res)=>{
-    try{
-        const {FooditemId}=req.params;
-        const reviews= await review.find();
-        if(!reviews.length){
-            return res.status(404).json({message:"no reviews found for the foood item"})
+};
 
+const deleteReview = async (req, res) => {
+    try {
+        const { reviewId } = req.params;
+        const review = await Review.findByIdAndDelete(reviewId);
+        if (!review) {
+            return res.status(404).json({ message: "Review not found" });
         }
-        const average=reviews.reduce((sum,reviews)=>sum+reviews.rating,0)/reviews.length;
-        res.staus(200).json({average})
-    }catch(error){
-        res.status(500).json({message:"inernal server error",error})
+        res.status(200).json({ message: "Review deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
-}
+};
 
-module.exports = { getAverageRating, deleteReview, addReview, getfoodReviews };
+const getAverageRating = async (req, res) => {
+    try {
+        const { foodItemId } = req.params;
+        const reviews = await Review.find({ foodItemId });
+        if (!reviews.length) {
+            return res.status(404).json({ message: "No reviews found for the food item" });
+        }
+        const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+        res.status(200).json({ average });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
+module.exports = { getAverageRating, deleteReview, addReview, getFoodReviews };

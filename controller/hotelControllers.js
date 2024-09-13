@@ -6,7 +6,7 @@ const createhotel = async (req, res) => {
 
         const {
             name,
-            address: { street, city, state, postalcode, country },
+            address: { street, city, state, postalCode, country },
             phone,
             email,
             website,
@@ -34,7 +34,7 @@ const createhotel = async (req, res) => {
         // Create new hotel
         const newhotel = new Hotel({
             name,
-            address: { street, city, state, postalcode, country },
+            address: { street, city, state, postalCode, country },
             phone,
             email,
             website,
@@ -63,7 +63,7 @@ const getallhotels = async (req, res) => {
     try {
         const hotels = await Hotel.find();
         if (!hotels || hotels.length === 0) {
-            return res.status(200).json({ message: "Empty database" });
+            return res.status(200).json({ message: "No hotels found" });
         }
         res.status(200).json(hotels);
     } catch (err) {
@@ -83,11 +83,11 @@ const gethotelbyid = async (req, res) => {
     }
 };
 
-const updatehotels = async (req, res, next) => {
+const updatehotels = async (req, res) => {
     try {
         const {
             name,
-            address: { street, city, state, postalcode, country },
+            address: { street, city, state, postalCode, country },
             phone,
             email,
             website,
@@ -104,7 +104,7 @@ const updatehotels = async (req, res, next) => {
         // Find and update the hotel
         const updatedHotel = await Hotel.findByIdAndUpdate(req.params.id, {
             name,
-            address: { street, city, state, postalcode, country },
+            address: { street, city, state, postalCode, country },
             phone,
             email,
             website,
@@ -113,11 +113,12 @@ const updatehotels = async (req, res, next) => {
             openingHours: { open, close },
             fooditems,
             isActive,
-            ...(image && { image })
+            ...(image && { image }),
+            updatedAt: Date.now()
         }, { new: true, runValidators: true }).populate('fooditems');
 
         if (!updatedHotel) {
-            return res.status(404).json({ error: 'Hotel not found' });
+            return res.status(404).json({ message: 'Hotel not found' });
         }
 
         res.status(200).json(updatedHotel);

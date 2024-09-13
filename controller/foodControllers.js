@@ -1,6 +1,5 @@
 const { FoodItem } = require("../models/foodmodel");
 
-
 const getAllFoodItems = async (req, res) => {
     try {
         const foodItems = await FoodItem.find();
@@ -10,7 +9,6 @@ const getAllFoodItems = async (req, res) => {
     }
 };
 
-
 const getFoodItemById = async (req, res) => {
     try {
         const foodItem = await FoodItem.findById(req.params.id);
@@ -18,12 +16,10 @@ const getFoodItemById = async (req, res) => {
             return res.status(404).json({ error: 'Food item not found' });
         }
         res.status(200).json(foodItem);
-    } catch (err) { 
-        console.log(err)
-        res.status(500).json({ error: err.message }); // Improved error handling
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
-
 
 const createFoodItem = async (req, res) => {
     try {
@@ -34,7 +30,6 @@ const createFoodItem = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
-
 
 const updateFoodItem = async (req, res) => {
     try {
@@ -48,7 +43,6 @@ const updateFoodItem = async (req, res) => {
     }
 };
 
-
 const deleteFoodItem = async (req, res) => {
     try {
         const foodItem = await FoodItem.findByIdAndDelete(req.params.id);
@@ -60,7 +54,6 @@ const deleteFoodItem = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
 
 const searchFoodItems = async (req, res) => {
     try {

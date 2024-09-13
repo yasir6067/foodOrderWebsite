@@ -13,12 +13,12 @@ const adminSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minLenght: 8,
+        minLength: 8,  // Fixed spelling
         trim: true,
     }
-   
+    
 });
 
-const admin = mongoose.model("admin", adminSchema);
+const Admin = mongoose.model("Admin", adminSchema); // Capitalized model name
 
-module.exports = { admin };
+module.exports = { Admin };
