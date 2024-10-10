@@ -1,5 +1,6 @@
-const { FoodItem } = require("../models/foodmodel");
+const FoodItem = require("../models/fooditemsmodel");
 
+// 1. Get all food items
 const getAllFoodItems = async (req, res) => {
     try {
         const foodItems = await FoodItem.find();
@@ -9,6 +10,7 @@ const getAllFoodItems = async (req, res) => {
     }
 };
 
+// 2. Get food item by ID
 const getFoodItemById = async (req, res) => {
     try {
         const foodItem = await FoodItem.findById(req.params.id);
@@ -21,16 +23,18 @@ const getFoodItemById = async (req, res) => {
     }
 };
 
+// 3. Create a new food item
 const createFoodItem = async (req, res) => {
     try {
         const foodItem = new FoodItem(req.body);
         await foodItem.save();
-        res.status(201).json(foodItem);
+        res.status(201).json({ success: true, foodItem });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ success: false, error: error.message });
     }
 };
 
+// 4. Update a food item by ID
 const updateFoodItem = async (req, res) => {
     try {
         const foodItem = await FoodItem.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -43,6 +47,7 @@ const updateFoodItem = async (req, res) => {
     }
 };
 
+// 5. Delete a food item by ID
 const deleteFoodItem = async (req, res) => {
     try {
         const foodItem = await FoodItem.findByIdAndDelete(req.params.id);
@@ -55,6 +60,7 @@ const deleteFoodItem = async (req, res) => {
     }
 };
 
+// 6. Search food items by name
 const searchFoodItems = async (req, res) => {
     try {
         const { query } = req.query;
@@ -65,4 +71,11 @@ const searchFoodItems = async (req, res) => {
     }
 };
 
-module.exports = { getAllFoodItems, getFoodItemById, createFoodItem, updateFoodItem, deleteFoodItem, searchFoodItems };
+module.exports = {
+    getAllFoodItems,
+    getFoodItemById,
+    createFoodItem,
+    updateFoodItem,
+    deleteFoodItem,
+    searchFoodItems
+};

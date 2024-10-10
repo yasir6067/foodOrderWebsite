@@ -1,14 +1,16 @@
 var jwt=require("jsonwebtoken");
 const dotenv=require('dotenv')
 dotenv.config();
-const generatetoken=(id,role)=>{
+const generatetoken=(id, role)=>{
     try{
-        var token = jwt.sign({id:id,role:role||"user"},process.env.JWT_SECRET_KEY)
+        const token = jwt.sign(
+            {id:id,role:role || "user"}, process.env.JWT_SECRET_KEY)
 return token;
     }catch(error){
-        console.log(error)
+        console.error(error)
+        return null
     }
 }
 
 
-module.exports={generatetoken}
+module.exports = {generatetoken};

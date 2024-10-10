@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { FoodItem } = require("./foodmodel");
+const { FoodItem } = require("./fooditemsmodel");
 
 const cartSchema = new mongoose.Schema({
     userId: {
